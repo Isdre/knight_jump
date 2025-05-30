@@ -101,12 +101,20 @@ class KnightWorldEnv(gym.Env):
         # Map the action (element of {0,1,2,3}) to the direction we walk in
         direction = self._action_to_direction[action]
         # We use `np.clip` to make sure we don't leave the grid
+        # DON'T MOVE IF THE MOVE IS INVALID
+        if not np.all(
+            (0 <= self._agent_location + direction) & (self._agent_location + direction < self.size)
+        ):
+            # Return negative reward for invalid moves to discourage loops
+            return self._get_obs(), -0.1, False, False, self._get_info()
         self._agent_location = np.clip(
             self._agent_location + direction, 0, self.size - 1
         )
         # An episode is done iff the agent has reached the target
         terminated = np.array_equal(self._agent_location, self._target_location)
-        reward = 1 if terminated else 0  # Binary sparse rewards
+        # Small negative reward for each valid move that doesn't reach the target
+        # This encourages the agent to find the shortest path
+        reward = 1 if terminated else -0.01
         observation = self._get_obs()
         info = self._get_info()
 
