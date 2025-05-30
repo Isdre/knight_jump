@@ -7,10 +7,10 @@ import numpy as np
 env = gymnasium.make('gymnasium_env/KnightWorldEnv-v0', size=12)#, render_mode="human")
 
 alpha = 0.1
-gamma = 0.9
+gamma = 0.99
 epsilon = 0.9
 episodes = 10000
-max_steps = 100
+max_steps = 1000
 epsilon_decay = 0.999
 
 # Since the observation space is a Dict, we need to flatten it for Q-learning

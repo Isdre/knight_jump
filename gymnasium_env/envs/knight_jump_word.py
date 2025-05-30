@@ -21,7 +21,7 @@ class KnightWorldEnv(gym.Env):
     def __init__(self, render_mode=None, size=5):
         self.size = size  # The size of the square grid
         self.window_size = 512  # The size of the PyGame window
-
+        self.previous_pos = None  # Used to store the previous position of the agent
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2,
         # i.e. MultiDiscrete([size, size]).
@@ -80,7 +80,7 @@ class KnightWorldEnv(gym.Env):
 
         # Choose the agent's location uniformly at random
         self._agent_location = self.np_random.integers(0, self.size, size=2, dtype=int)
-
+        self.previous_pos = None
         # We will sample the target's location randomly until it does not
         # coincide with the agent's location
         self._target_location = self._agent_location
@@ -102,14 +102,23 @@ class KnightWorldEnv(gym.Env):
         direction = self._action_to_direction[action]
         # We use `np.clip` to make sure we don't leave the grid
         # DON'T MOVE IF THE MOVE IS INVALID
+
+        if np.all(self.previous_pos == self._agent_location + direction):
+            # If the agent tries to move back to the previous position, we return a negative reward
+            return self._get_obs(), -0.2, False, False, self._get_info()
+        
+        
+
         if not np.all(
             (0 <= self._agent_location + direction) & (self._agent_location + direction < self.size)
         ):
             # Return negative reward for invalid moves to discourage loops
-            return self._get_obs(), -0.1, False, False, self._get_info()
-        self._agent_location = np.clip(
-            self._agent_location + direction, 0, self.size - 1
-        )
+            return self._get_obs(), -0.2, False, False, self._get_info()
+        
+        self.previous_pos == self._agent_location
+
+        self._agent_location += direction
+
         # An episode is done iff the agent has reached the target
         terminated = np.array_equal(self._agent_location, self._target_location)
         # Small negative reward for each valid move that doesn't reach the target
