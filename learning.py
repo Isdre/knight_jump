@@ -4,13 +4,15 @@ from gymnasium.wrappers import FlattenObservation
 import matplotlib.pyplot as plt
 import numpy as np
 
-env = gymnasium.make('gymnasium_env/KnightWorldEnv-v0', size=12)#, render_mode="human")
+grid_size = 12
+
+env = gymnasium.make('gymnasium_env/KnightWorldEnv-v0', size=grid_size)#, render_mode="human")
 
 alpha = 0.1
-gamma = 0.9
+gamma = 0.99
 epsilon = 0.9
 episodes = 10000
-max_steps = 100
+max_steps = 1000
 epsilon_decay = 0.999
 
 # Since the observation space is a Dict, we need to flatten it for Q-learning
@@ -22,14 +24,14 @@ env = wrapped_env  # Use the wrapped environment for training
 def state_to_index(state):
     # For a 12x12 grid, we need to encode agent and target positions
     # print(f"Current state: {state}")
-    agent_pos = state[0] * 12 + state[1]  # agent y*width + x
-    target_pos = state[2] * 12 + state[3]  # target y*width + x
+    agent_pos = state[0] * grid_size + state[1]  # agent y*width + x
+    target_pos = state[2] * grid_size + state[3]  # target y*width + x
     # Create a unique index based on both positions
     # There are at most 12x12=144 possible positions for each
-    return int(agent_pos * 144 + target_pos)
+    return int(agent_pos * grid_size*grid_size + target_pos)
 
 # Define state space size based on the maximum possible index
-state_space_size = 144 * 144  # 12x12 grid positions for both agent and target
+state_space_size = grid_size * grid_size * grid_size * grid_size  # 12x12 grid positions for both agent and target
 action_space_size = env.action_space.n
 
 # Create Q-table
@@ -84,4 +86,4 @@ else:
 
 np.save("Q_table.npy", Q)
 # Save the size parameter for visualization
-np.save("grid_size.npy", np.array([12]))
+np.save("grid_size.npy", np.array([grid_size]))
